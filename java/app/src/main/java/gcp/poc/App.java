@@ -4,8 +4,10 @@
 package gcp.poc;
 
 import java.io.IOException;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.concurrent.TimeUnit;
 
 import com.google.api.gax.paging.Page;
 import com.google.cloud.storage.Blob;
@@ -14,6 +16,7 @@ import com.google.cloud.storage.BlobInfo;
 import com.google.cloud.storage.Bucket;
 import com.google.cloud.storage.BucketInfo;
 import com.google.cloud.storage.Storage;
+import com.google.cloud.storage.StorageException;
 import com.google.cloud.storage.StorageOptions;
 
 public class App {
@@ -95,6 +98,25 @@ public class App {
                         + destFilePath);
     }
 
+    public static void generateV4GetObjectSignedUrl(
+            String projectId, String bucketName, String objectName) throws StorageException {
+        // String projectId = "my-project-id";
+        // String bucketName = "my-bucket";
+        // String objectName = "my-object";
+
+        Storage storage = StorageOptions.newBuilder().setProjectId(projectId).build().getService();
+
+        // Define resource
+        BlobInfo blobInfo = BlobInfo.newBuilder(BlobId.of(bucketName, objectName)).build();
+
+        URL url = storage.signUrl(blobInfo, 15, TimeUnit.MINUTES, Storage.SignUrlOption.withV4Signature());
+
+        System.out.println("Generated GET signed URL:");
+        System.out.println(url);
+        System.out.println("You can use this URL with any user agent, for example:");
+        System.out.println("curl '" + url + "'");
+    }
+
     public static void main(String... args) throws Exception {
         String bucket_name = "work-poc";
         String project_id = "";
@@ -106,5 +128,6 @@ public class App {
         // listObjects(project_id, bucket_name);
         // uploadObject(project_id, bucket_name, destination_filename, filename);
         // downloadObject(project_id, bucket_name, destination_filename, download_path);
+        generateV4GetObjectSignedUrl(project_id, bucket_name, destination_filename);
     }
 }
